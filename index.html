@@ -1,0 +1,684 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="A 36-question political survey that shows no labels until the end. Find out which labels actually fit what you believe.">
+<meta property="og:title" content="Plumb Line"><meta property="og:description" content="A political survey with no labels until the end. Find out which ones fit what you believe."><meta property="og:type" content="website">
+<meta name="twitter:card" content="summary"><meta name="theme-color" content="#C74600">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23C74600'/%3E%3Cpath d='M16 5v14' stroke='white' stroke-width='3'/%3E%3Cpath d='M10 19h12l-6 8z' fill='white'/%3E%3C/svg%3E">
+<title>Plumb Line</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+/* Layout: one survey sheet on a faint plat grid. A single column of station cards, and a results page that reads like a survey report. */
+:root{
+  --bg:#ECF0EE; --surface:#F8FAF9; --ink:#14201E; --ink2:#4A5A57; --line:#C5CFCB; --grid:#DCE3E0;
+  --accent:#C74600; --accent-ink:#FFFFFF; --sel:#FBE7DA; --teal:#0B6560; --teal-soft:#D3E8E5;
+  --font-d:'Bricolage Grotesque','Avenir Next','Segoe UI',system-ui,sans-serif;
+  --font-b:'Source Serif 4','Iowan Old Style','Georgia',serif;
+  --font-m:'IBM Plex Mono','SFMono-Regular',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1312; --surface:#131C1A; --ink:#E7EFEC; --ink2:#9BAEA9; --line:#2A3835; --grid:#16201E;
+    --accent:#FF8A3D; --accent-ink:#1B0F06; --sel:#2C1B10; --teal:#5CC4BB; --teal-soft:#15312E; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1312; --surface:#131C1A; --ink:#E7EFEC; --ink2:#9BAEA9; --line:#2A3835; --grid:#16201E;
+  --accent:#FF8A3D; --accent-ink:#1B0F06; --sel:#2C1B10; --teal:#5CC4BB; --teal-soft:#15312E; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background-color:var(--bg); color:var(--ink); font:17px/1.55 var(--font-b);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px; padding-inline:16px; padding-block:0; min-height:100vh;
+}
+#app{max-width:640px;margin:0 auto;padding-block:0 28px}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+.top{display:flex;justify-content:space-between;align-items:baseline;padding-block:14px 10px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:3}
+.brand{font:700 15px var(--font-d);letter-spacing:.02em}
+.count{font:500 13px var(--font-m);color:var(--ink2);font-variant-numeric:tabular-nums}
+.prog{position:sticky;top:calc(env(safe-area-inset-top,0px) + 42px);height:4px;background:var(--line);z-index:3;margin-bottom:22px}
+.prog i{position:absolute;left:0;top:0;bottom:0;background:var(--accent)}
+.prog b{position:absolute;top:-3px;width:1px;height:10px;background:var(--ink2)}
+
+.eyebrow{font:500 12px var(--font-m);letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);margin:0 0 10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:22px 18px 18px}
+.q{font:700 clamp(22px,5.4vw,28px)/1.2 var(--font-d);margin:0 0 10px;text-wrap:balance;letter-spacing:-.01em}
+.note{margin:0 0 14px;color:var(--ink2);font-size:15px}
+#qbody{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.hint{min-height:1.4em;margin:12px 0 0;font:500 13px var(--font-m);color:var(--accent)}
+
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:13px 14px;border:1px solid var(--line);border-radius:6px;background:var(--bg);cursor:pointer;min-width:0}
+.opt:hover{border-color:var(--ink2)}
+.opt.on{border-color:var(--accent);background:var(--sel);box-shadow:inset 0 0 0 1px var(--accent)}
+.otxt{min-width:0;overflow-wrap:anywhere;line-height:1.4}
+.key{flex:none;width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--ink2);border-radius:4px;font:500 13px var(--font-m);color:var(--ink2)}
+.opt.on .key{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.link{align-self:flex-start;background:none;border:0;padding:6px 0;font:500 13px var(--font-m);color:var(--ink2);text-decoration:underline;cursor:pointer}
+
+.grow{padding-block:12px;border-top:1px solid var(--line)}
+.grow:first-child{border-top:0;padding-top:0}
+.glabel{margin:0 0 8px;font:600 15px var(--font-d)}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.pill{padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:var(--bg);font-size:14px;line-height:1.25;cursor:pointer}
+.pill:hover{border-color:var(--ink2)}
+.pill.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+.arow{padding-block:6px}
+.arow label{display:block;font:600 15px var(--font-d);margin-bottom:4px}
+.aline{display:flex;gap:12px;align-items:center}
+.aline input{flex:1;min-width:0;accent-color:var(--accent);height:28px}
+.aline output{flex:none;width:44px;text-align:right;font:500 14px var(--font-m);font-variant-numeric:tabular-nums}
+
+.nav{display:flex;gap:10px;justify-content:space-between;position:sticky;bottom:0;background:var(--bg);padding:12px 0 calc(12px + env(safe-area-inset-bottom,0px));margin-top:18px;border-top:1px solid var(--line)}
+.btn{padding:12px 20px;border:1px solid var(--ink);border-radius:6px;background:transparent;font:600 15px var(--font-d);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.nav .primary{flex:1;max-width:260px}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+
+.intro{padding-top:min(14vh,96px)}
+.intro h1{font:700 clamp(52px,16vw,92px)/.95 var(--font-d);letter-spacing:-.03em;margin:0 0 18px}
+.lede{font-size:19px;line-height:1.5;margin:0 0 18px;max-width:34em}
+.facts{list-style:none;padding:0;margin:0 0 18px;display:grid;gap:6px;font:400 14px var(--font-m);color:var(--ink2)}
+.facts span{color:var(--ink);font-weight:500;display:inline-block;min-width:2.4ch}
+.aside{margin:0 0 24px;color:var(--ink2);font-size:16px;max-width:34em}
+
+.res{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:20px 18px;margin-bottom:14px}
+.res h3{font:700 20px var(--font-d);margin:0 0 12px}
+.res p{margin:0 0 12px}
+.big{font:700 clamp(34px,9vw,52px)/1.02 var(--font-d);letter-spacing:-.02em;margin:0 0 14px;text-wrap:balance}
+.match{font:400 14px var(--font-m);color:var(--ink2)}
+.match span{font:700 22px var(--font-d);color:var(--accent);margin-right:2px}
+.map{display:block;width:100%;max-width:420px;margin:14px auto 8px}
+.plot{fill:var(--bg);stroke:var(--ink2);stroke-width:1}
+.cross{stroke:var(--line);stroke-width:1;stroke-dasharray:3 4}
+.axl{font:500 10px var(--font-m);letter-spacing:.1em;fill:var(--ink2)}
+.clab{font:500 11px var(--font-m);fill:var(--ink2)}
+.tdot{fill:var(--teal)}
+.tlab{font:500 12px var(--font-m);fill:var(--teal)}
+.you{fill:var(--accent);stroke:var(--surface);stroke-width:3}
+.ylab{font:700 14px var(--font-d);fill:var(--ink)}
+.cap{font-size:14px;color:var(--ink2);margin:0}
+
+.think{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.think li{padding-left:14px;border-left:3px solid var(--teal)}
+.think b{font-family:var(--font-d);font-weight:700}
+
+.meter{margin-bottom:16px}
+.mname{font:600 14px var(--font-d);margin:0 0 6px!important}
+.mbar{position:relative;height:6px;background:var(--line);border-radius:3px;margin:0 7px}
+.mbar i{position:absolute;top:-5px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);box-sizing:border-box;box-shadow:0 0 0 1px var(--ink2)}
+.mends{display:flex;justify-content:space-between;gap:12px;margin:8px 0 0!important;font:400 12px var(--font-m);color:var(--ink2)}
+
+.evid{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.evid li{font-size:16px}
+.eh{display:block;font:500 12px var(--font-m);letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-bottom:2px}
+
+.swaps{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:12px}
+.swaps li{border-top:1px solid var(--line);padding-top:10px}
+.swaps p{font-size:15px;margin:4px 0 0!important;color:var(--ink2)}
+.sh{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.sh b{font:600 15px var(--font-d)}
+.chip{font:500 12px var(--font-m);padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
+.chip.g0{background:var(--teal-soft);color:var(--teal);border-color:var(--teal-soft)}
+.chip.g2{background:var(--sel);color:var(--accent);border-color:var(--accent)}
+.copybox{width:100%;min-height:150px;margin-top:12px;padding:10px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;font:13px/1.5 var(--font-m)}
+@media (prefers-reduced-motion:no-preference){.prog i{transition:width .25s ease}.opt,.pill{transition:border-color .12s,background-color .12s}}
+@media (max-width:420px){.card{padding:18px 14px 14px}.res{padding:16px 14px}}
+</style>
+<div id="app"></div>
+<noscript>This survey needs JavaScript turned on.</noscript><script>
+// Plumb Line v2 data: claims, labels, stances, questions. Plain language; labels are never shown until results.
+var CLAIMS = {
+  e_public:"Major industries like energy, banks and transport should be owned by the public or by their workers.",
+  e_abolish:"Private ownership of big industry should be abolished.",
+  e_plan:"The government should plan what the economy produces.",
+  e_coop:"Companies should be owned by the people who work in them and compete in a market.",
+  e_welfare:"Taxes should pay for health care, education and pensions for everyone.",
+  e_union:"Unions and regulation should balance the power of owners.",
+  e_market:"Free trade and private property do the most to protect freedom.",
+  e_small:"Taxes beyond courts, police and defense are a kind of force.",
+  e_jobs:"Government should protect ordinary people's jobs and wages, even with tariffs or by breaking up big companies.",
+  e_econ_elite:"A distant economic elite (big banks, monopolies, big donors) is cheating ordinary people.",
+  e_cult_elite:"A distant cultural and political elite (bureaucrats, media, universities) is cheating ordinary people.",
+  m_value:"Workers create the value a company sells.",
+  m_conflict:"On pay and conditions, owners and workers want opposite things.",
+  m_power:"People who own lots of capital get more say in politics.",
+  m_conc:"Left alone, wealth ends up in fewer and fewer hands.",
+  l_rights:"Individual rights (speech, religion, a fair trial) come before what the majority or the state wants.",
+  l_choice:"Personal choices are nobody else's business as long as no one else is harmed.",
+  l_fix:"Government may step in to fix markets and protect the weak, within limits.",
+  s_struct:"Unequal outcomes mostly come from how systems are built.",
+  s_indiv:"Unequal outcomes mostly come from people's own choices and effort.",
+  s_redesign:"Government and institutions should actively redesign systems to fix inequality.",
+  s_expert:"Trained experts should lead reform.",
+  k_inherit:"Inherited institutions hold knowledge no planner has, so change should be slow and tested.",
+  k_order:"Order and responsibility come before abstract plans.",
+  k_obey:"A strong ruler or council should enforce the inherited order, and obedience keeps society stable.",
+  r_faith:"Public life should rest on moral truths drawn from faith.",
+  r_law:"Law may support family and worship.",
+  t_relig_law:"Religious law should override elected law.",
+  t_relig_dissent:"Dissent from the faith may be punished.",
+  n_loyal:"The nation is the main thing a person owes loyalty to.",
+  n_borders:"Borders, shared culture and national interest outrank global rules and open trade.",
+  n_ancestry:"A nation is defined by shared ancestry or culture.",
+  n_immig:"Immigration should be sharply cut.",
+  n_over_rights:"When the nation's interest clashes with individual rights, the nation wins.",
+  n_native:"Trade and borders should serve the native-born worker first.",
+  n_unity:"Class conflict should give way to national unity under state-directed business.",
+  t_oneparty:"One party should rule on behalf of the people.",
+  t_revolution:"If elections cannot bring change, revolution is justified.",
+  t_violence:"Violence against political opponents is acceptable.",
+  t_statefirst:"The individual exists to serve the state.",
+  t_hered:"The top office should pass by blood.",
+  t_crown:"The people are not the final source of authority; an ancient crown is.",
+  a_nostate:"Society should work with no state at all.",
+  a_illegit:"Most authority over people is illegitimate.",
+  tt_loyalty:"Citizens can be required to show loyalty to the state or its ideas.",
+  tt_surveil:"The state may watch private communications to catch dangerous ideas.",
+  tt_children:"The state, not parents, should decide what children are taught.",
+  tt_ban:"The state may ban groups or papers whose ideas it judges dangerous.",
+  f_inst:"Peace comes from treaties, trade and shared institutions.",
+  f_rights:"Democracies should act together to protect rights abroad.",
+  f_force:"A strong military should be used early to shape events.",
+  f_deter:"Weakness invites attack, so deterrence matters most.",
+  f_vital:"Fight only for vital national interests.",
+  f_other:"Other states act from their own interests, so do not try to remake them.",
+  f_noally:"No permanent alliances or foreign wars beyond defending the homeland.",
+  f_trade:"Trade with everyone."
+};
+
+// side: L / R / N (for the cross-the-aisle panel). has/not are claim ids; not-claims count 0.6.
+var LABELS = [
+  {id:"communist", name:"Communist", side:"L", fam:"Left", has:["e_abolish","e_plan","t_revolution","t_oneparty","m_value","m_conflict"], not:["e_market"], anchors:"Marx, Engels, Lenin", tell:"Private ownership of major industry should end, the economy should be planned, and the change may need revolution and a transitional state."},
+  {id:"demsoc", name:"Democratic socialist", side:"L", fam:"Left", has:["e_public","e_union","m_conflict","m_power","e_welfare"], not:["t_revolution","e_abolish"], anchors:"Debs, Harrington", tell:"Major industry and finance should be publicly or worker owned, and change should come by elections, not revolution."},
+  {id:"marketsoc", name:"Market socialist", side:"L", fam:"Left", has:["e_coop","m_value","e_union","e_public"], not:["e_plan","e_abolish"], anchors:"Roemer, Dahl, the Mondragon model", tell:"Firms are owned by their workers and compete in markets. Outside shareholders do not own capital."},
+  {id:"socdem", name:"Social democrat", side:"L", fam:"Left", has:["e_welfare","e_union","l_fix","l_rights"], not:["e_abolish","e_public","t_revolution"], anchors:"Bernstein, the Nordic model, Rawls", tell:"Private business stays, but taxes fund universal services and unions and regulation balance owners."},
+  {id:"progressive", name:"Progressive", side:"L", fam:"Left", has:["s_struct","s_redesign","s_expert","e_welfare"], not:["s_indiv","k_inherit"], anchors:"T. Roosevelt, La Follette, Dewey", tell:"Inequality and discrimination are built into systems, so government and institutions should actively redesign them, led by experts."},
+  {id:"liberal", name:"Liberal", side:"L", fam:"Left", has:["l_rights","l_choice","l_fix"], not:["t_statefirst","e_abolish","n_over_rights"], anchors:"Locke, Mill, Kant, Paine, FDR", tell:"Individual rights come first. Government is limited but may correct market failures and protect the weak."},
+  {id:"leftpop", name:"Left populist", side:"L", fam:"Center", has:["e_econ_elite","e_jobs","m_power","e_welfare"], not:["n_ancestry"], anchors:"Bryan, the People's Party, Huey Long", tell:"Ordinary people are cheated by a distant economic elite, and government should protect jobs and wages."},
+  {id:"rightpop", name:"Right populist", side:"R", fam:"Center", has:["e_cult_elite","n_native","n_borders","e_jobs"], not:["s_expert"], anchors:"Jackson, Pat Buchanan", tell:"Ordinary people are cheated by a distant cultural and political elite, and borders and trade should serve the native-born worker."},
+  {id:"classlib", name:"Classical liberal", side:"R", fam:"Right", has:["e_market","l_rights","l_fix"], not:["e_plan","e_public","e_abolish","t_statefirst"], anchors:"Locke, Adam Smith, Madison", tell:"Property, contract and free trade protect liberty. Government is limited to courts, defense and basic rules."},
+  {id:"libertarian", name:"Libertarian", side:"R", fam:"Right", has:["e_small","l_choice","e_market","l_rights"], not:["e_welfare","e_plan","l_fix","tt_ban","t_statefirst"], anchors:"Nozick, Milton Friedman", tell:"Government should be far smaller, taxes beyond a minimal state are coercion, and personal choices are nobody else's business."},
+  {id:"conservative", name:"Conservative", side:"R", fam:"Right", has:["k_inherit","k_order","e_market"], not:["s_redesign","t_revolution","k_obey","r_faith"], anchors:"Burke, Oakeshott, Kirk", tell:"Inherited institutions carry knowledge no planner has, so change should be slow and tested, and order and responsibility come first."},
+  {id:"natcon", name:"National conservative", side:"R", fam:"Right", has:["n_loyal","n_borders","n_native","k_inherit"], not:["t_statefirst","n_over_rights"], anchors:"Hazony", tell:"The nation is the main unit of loyalty. Borders, shared culture and national interest outrank global rules, but rights and elections stay."},
+  {id:"nationalist", name:"Nationalist", side:"R", fam:"Right", has:["n_ancestry","n_immig","n_over_rights","n_loyal"], not:["f_inst"], anchors:"Herder, Fichte", tell:"The nation is defined by shared ancestry or culture, and its interests outrank other nations' and, when they clash, individual rights."},
+  {id:"relcon", name:"Religious conservative", side:"R", fam:"Right", has:["r_faith","r_law","k_order"], not:["t_relig_law"], anchors:"Aquinas, Augustine", tell:"Public life should rest on moral truths drawn from faith, and law may support family and worship."},
+  {id:"authtrad", name:"Authoritarian traditionalist", side:"R", fam:"Authoritarian", has:["k_obey","k_order","k_inherit"], not:["l_choice","l_rights"], anchors:"Hobbes, Filmer", tell:"A strong ruler or council should enforce inherited order, and obedience and hierarchy keep society stable."},
+  {id:"monarchist", name:"Monarchist", side:"R", fam:"Authoritarian", has:["t_hered","t_crown","k_inherit","k_obey"], not:[], anchors:"Filmer, de Maistre, Bagehot (constitutional)", tell:"Sovereignty rests in a hereditary crown, not in the people. Constitutional versions keep the crown ceremonial and above party."},
+  {id:"fascist", name:"Fascist", side:"R", fam:"Authoritarian", has:["t_violence","t_statefirst","t_oneparty","n_unity","n_over_rights"], not:["l_rights"], anchors:"Gentile and Mussolini, The Doctrine of Fascism (1932)", tell:"The nation is one body and the state is its will. Individuals serve it, and violence and one-party rule are acceptable."},
+  {id:"theocrat", name:"Theocrat", side:"R", fam:"Authoritarian", has:["t_relig_law","t_relig_dissent","r_faith","r_law"], not:["l_rights"], anchors:"Calvin's Geneva, modern Islamic republics", tell:"Religious authorities should hold political power and law should be religious law."},
+  {id:"anarchist", name:"Anarchist", side:"N", fam:"Authoritarian", has:["a_nostate","a_illegit","l_choice"], not:["t_statefirst","tt_ban"], anchors:"Proudhon, Kropotkin, Rothbard (market anarchism)", tell:"Legitimate authority is rare, and society should be voluntary and self-governed with no state."}
+];
+LABELS.forEach(function(l){ if(l.id==="anarchist") l.fam="Anarchist"; });
+
+var EDGES = [
+  {id:"communist", name:"Communist", claims:["e_abolish","t_oneparty","t_revolution"]},
+  {id:"fascist", name:"Fascist", claims:["t_violence","t_statefirst","t_oneparty"]},
+  {id:"theocrat", name:"Theocrat", claims:["t_relig_law","t_relig_dissent"]},
+  {id:"anarchist", name:"Anarchist", claims:["a_nostate"]},
+  {id:"monarchist", name:"Monarchist", claims:["t_hered","t_crown"]},
+  {id:"nationalist", name:"Nationalist", claims:["n_over_rights","n_ancestry"]}
+];
+
+var STANCES = [
+  {id:"internationalist", name:"Liberal internationalist", has:["f_inst","f_rights","f_trade"], not:["f_noally"], anchors:"Kant (Perpetual Peace, 1795), Wilson", tell:"Peace comes from treaties, trade and shared institutions, and democracies should act together to protect rights abroad."},
+  {id:"interventionist", name:"Interventionist", has:["f_force","f_deter","f_rights"], not:["f_noally","f_vital"], anchors:"T. Roosevelt, Truman", tell:"A strong military should be used early to shape events and deter rivals, because weakness invites attack."},
+  {id:"realist", name:"Realist or restrained", has:["f_vital","f_other"], not:["f_force","f_rights","f_noally","f_inst"], anchors:"Kennan, Washington's Farewell Address", tell:"Fight only for vital interests. Other states act from their own interests, so do not try to remake them."},
+  {id:"nonint", name:"Non-interventionist", has:["f_noally","f_vital","f_trade"], not:["f_force","f_inst","f_deter"], anchors:"Jefferson's first inaugural, Ron Paul", tell:"No permanent alliances or foreign wars beyond defense of the homeland, but trade with everyone."}
+];
+
+// Axis weights for the map. x: collective(-) to markets(+). y: liberty(-) to authority(+).
+var AX = {
+  x:{e_public:-1,e_abolish:-1,e_plan:-1,e_coop:-.7,e_welfare:-.6,e_union:-.5,e_jobs:-.3,m_value:-.4,m_conflict:-.4,m_power:-.4,m_conc:-.4,e_market:1,e_small:1,k_inherit:.2},
+  y:{l_rights:-1,l_choice:-1,a_nostate:-1,a_illegit:-.8,t_statefirst:1,t_oneparty:1,t_violence:1,tt_loyalty:.8,tt_surveil:.8,tt_children:.8,tt_ban:.8,k_obey:.8,t_relig_law:1,t_relig_dissent:1,n_over_rights:.8,t_hered:.6,t_crown:.6,n_unity:.6,r_law:.3,k_order:.3}
+};
+
+// Option helper. s: claims supported (optionally "id:.5"), n: claims the option opposes.
+function o(t, s, n){ return {t:t, s:s||[], n:n||[]}; }
+function ox(t, s, n){ var r=o(t,s,n); r.x=true; return r; }
+
+var SETUP = [
+  {id:"self", q:"Which word do you most often use for your own politics?", note:"Answer honestly. It will be compared with your answers at the end.", o:[
+    {t:"Liberal", k:["liberal"]}, {t:"Progressive", k:["progressive"]}, {t:"Conservative", k:["conservative"]}, {t:"Libertarian", k:["libertarian"]},
+    {t:"Socialist", k:["demsoc","marketsoc","communist","socdem"]}, {t:"Populist", k:["leftpop","rightpop"]}, {t:"Moderate or independent", k:[]}, {t:"I don't use one", k:[]}]},
+  {id:"party", q:"Which party do you usually vote for?", o:[
+    {t:"Democratic"},{t:"Republican"},{t:"A third party"},{t:"No party, I pick person by person"},{t:"I don't vote"}]}
+];
+
+var QS = [
+ // ---- Economy
+ {id:"water", sec:"Economy", q:"A town's water system is run for profit and raises prices 40%. What should happen?", type:"single", o:[
+   o("Nothing. Prices follow supply and demand.",["e_market","e_small"]),
+   o("Regulate the prices, but let the owners keep it.",["l_fix","e_union"]),
+   o("The town buys it and runs it as a public service.",["e_public","e_welfare"]),
+   o("Customers and workers co-own it.",["e_coop","m_value:.5"]),
+   o("Break up the company that owns it and others like it.",["e_jobs","e_econ_elite"])]},
+ {id:"offlimits", sec:"Economy", q:"Which of these should be kept away from the profit motive?", note:"Select all that apply.", type:"multi", o:[
+   o("Prisons",["l_rights"]), o("Health care",["e_welfare"]), o("Schools",["e_welfare"]), o("Water and power",["e_public"]),
+   o("Housing",["e_public","s_redesign:.5"]), o("Banks and money",["e_public","e_econ_elite:.5"]), o("Police and military",["t_statefirst:.5","n_loyal:.5"]),
+   ox("None. Profit works everywhere.",["e_market","e_small"])]},
+ {id:"factory", sec:"Economy", q:"A big factory is closing and 800 jobs will go. What is the best response?", type:"single", o:[
+   o("Let it close. New jobs will appear.",["e_market","s_indiv"]),
+   o("Pay the workers while they retrain.",["e_welfare","e_union"]),
+   o("Let the workers buy it, with public help.",["e_coop","e_public"]),
+   o("Block it with tariffs on foreign rivals.",["e_jobs","n_native"]),
+   o("The government takes it over.",["e_public","e_plan:.5"])]},
+ {id:"bailout", sec:"Economy", q:"A huge company is about to fail. Which response is closest to yours?", type:"single", o:[
+   o("Let it fail. Owners take the loss.",["e_market","e_small"]),
+   o("Protect the workers (pay, retraining), not the owners or executives.",["e_welfare","e_union","m_conflict:.5"]),
+   o("Help it only if the workers become owners and elect the leaders.",["e_coop","e_public","m_value:.5"]),
+   o("The government takes it and runs it.",["e_public","e_plan"]),
+   o("Break it up so no company is that big.",["e_jobs","e_econ_elite"])]},
+ {id:"marx", sec:"Economy", q:"Which of these do you think are mostly true?", note:"Select all that apply.", type:"multi", o:[
+   o("Workers create the value a company sells.",["m_value"]),
+   o("On pay and conditions, owners and workers want opposite things.",["m_conflict"]),
+   o("People who own lots of capital get more say in politics.",["m_power"]),
+   o("Left alone, wealth ends up in fewer and fewer hands.",["m_conc"]),
+   ox("None of these.",["e_market"])]},
+ {id:"gaps", sec:"Economy", q:"What should the government do about big gaps in wealth?", type:"single", o:[
+   o("Nothing. Gaps reflect effort and risk.",["e_market","s_indiv","e_small"]),
+   o("Make sure everyone has equal opportunity: good schools and fair rules.",["l_fix","s_indiv:.5"]),
+   o("Tax the rich more to pay for services for everyone.",["e_welfare","s_struct","m_conc"]),
+   o("Take big companies into public or worker ownership.",["e_public","e_coop:.5"]),
+   o("End private ownership of big industry altogether.",["e_abolish","e_plan"]),
+   o("Gaps are a problem, but government fixes tend to be worse.",["k_inherit","e_market"])]},
+ {id:"decide", sec:"Economy", q:"Who should decide what a country makes and sells?", type:"single", o:[
+   o("Millions of buyers and sellers.",["e_market"]),
+   o("Companies, under rules set by government.",["l_fix","e_union"]),
+   o("A national plan.",["e_plan","e_public"]),
+   o("Councils of workers in each industry.",["e_coop","e_public","m_value:.5"]),
+   o("The nation's leaders, in the national interest.",["n_unity","t_statefirst"])]},
+ {id:"imports", sec:"Economy", q:"A cheaper foreign product is wiping out local manufacturers. What should happen?", type:"single", o:[
+   o("Allow it. Lower prices help everyone.",["e_market","f_trade"]),
+   o("Allow it, and pay the displaced workers.",["e_welfare","f_trade:.5"]),
+   o("Put a tariff on it to protect local jobs.",["e_jobs","n_native","n_borders"]),
+   o("Limit foreign goods and buy national.",["n_borders","n_unity","n_native"])]},
+ {id:"own", sec:"Economy", q:"Which is closest to your view on who should own large businesses?", type:"single", o:[
+   o("Anyone who can afford to.",["e_market"]),
+   o("Private owners, with limits on their power.",["l_fix","e_union"]),
+   o("Large firms should be owned by their workers or the public.",["e_public","e_coop","m_value:.5"]),
+   o("Private ownership of large industry should end.",["e_abolish","e_plan"]),
+   o("It matters less who owns them than that they serve the nation.",["n_unity","n_loyal"])]},
+ {id:"tax", sec:"Economy", q:"Beyond courts, police and defense, taxes are...", type:"single", o:[
+   o("A fair price for services we all use.",["e_welfare","l_fix"]),
+   o("Fine for a safety net, and little else.",["l_fix"]),
+   o("A form of force, since you cannot opt out.",["e_small","e_market","l_choice"]),
+   o("A way to correct unfair advantage, so the rich should pay much more.",["e_welfare","s_struct","m_conc"])]},
+ {id:"union", sec:"Economy", q:"Workers at a big company want a union. The company says no. What should happen?", type:"single", o:[
+   o("The law protects their right to organize.",["e_union","m_conflict"]),
+   o("Let each side bargain freely; no special law.",["e_market"]),
+   o("Workers should run the company themselves.",["e_coop","m_value"]),
+   o("Unions divide workers from owners who share their interest, so discourage them.",["k_order"])]},
+ {id:"blame", sec:"Power", q:"When ordinary people struggle, who is mostly to blame?", type:"single", o:[
+   o("Distant billionaires, banks and monopolies.",["e_econ_elite","m_power"]),
+   o("Distant politicians, media and universities.",["e_cult_elite"]),
+   o("Bad personal choices.",["s_indiv"]),
+   o("Nobody. That is how life works.",["k_order","e_market"]),
+   o("Outsiders: foreign competitors and new arrivals.",["n_native","n_borders","n_immig:.5"])]},
+ {id:"why", sec:"Power", q:"Why are some groups poorer than others on average?", type:"single", o:[
+   o("Mostly their own choices and effort.",["s_indiv"]),
+   o("Mostly systems built long ago that still shape outcomes.",["s_struct"]),
+   o("Both about equally.",["s_struct:.5","s_indiv:.5"]),
+   o("Culture and family structure.",["k_order","s_indiv:.5"])]},
+ {id:"experts", sec:"Power", q:"A panel of trained experts says a policy would help, but most voters oppose it. What should happen?", type:"single", o:[
+   o("The experts decide.",["s_expert"]),
+   o("The voters decide.",["e_cult_elite"]),
+   o("Neither. Let people choose for themselves.",["l_choice","e_small"]),
+   o("A council of elders guided by tradition decides.",["k_inherit","k_obey"])]},
+ // ---- Rights
+ {id:"emergency", sec:"Rights", q:"In an emergency, which of these should the government be allowed to do?", note:"Select all that apply.", type:"multi", o:[
+   o("Hold someone for weeks without a trial.",["t_statefirst"]),
+   o("Read private messages without a court order.",["tt_surveil"]),
+   o("Shut down a newspaper that spreads dangerous lies.",["tt_ban"]),
+   o("Ban a political party it sees as a threat.",["tt_ban","t_oneparty:.5"]),
+   o("Make people sign a loyalty pledge.",["tt_loyalty"]),
+   o("Use the army to break up a large protest.",["t_violence:.5","t_statefirst:.5"]),
+   ox("None of these.",["l_rights"])]},
+ {id:"speech", sec:"Rights", q:"When is it OK to limit what people say?", type:"single", o:[
+   o("Only for direct threats.",["l_rights","l_choice"]),
+   o("When it harms groups of people.",["s_redesign","l_fix"]),
+   o("When it mocks religion or morals.",["r_faith","k_order","t_relig_dissent:.5"]),
+   o("When it undermines the nation.",["n_over_rights","tt_ban","tt_surveil:.5"]),
+   o("Whenever the state decides.",["t_statefirst"])]},
+ {id:"vice", sec:"Rights", q:"Two adults do something that harms no one else, but many people find it immoral. The law should...", type:"single", o:[
+   o("Leave them alone.",["l_choice","e_small"]),
+   o("Regulate it to protect the vulnerable.",["l_fix"]),
+   o("Ban it. Society depends on shared morals.",["r_law","k_order"]),
+   o("Ban it. It breaks God's law.",["t_relig_law","r_faith"])]},
+ {id:"leaderlaw", sec:"Rights", q:"Which comes closest to your view of a country's leader?", type:"single", o:[
+   o("The law applies to the leader exactly like everyone else.",["l_rights"]),
+   o("A strong leader must be free to bend rules to get things done.",["k_obey","t_statefirst"]),
+   o("The leader should come from a line with ancient right, bound by tradition.",["t_hered","t_crown","k_inherit"]),
+   o("The leader carries out the will of the nation.",["n_unity","t_statefirst","t_oneparty:.5"])]},
+ {id:"teach", sec:"Rights", q:"Who should decide what children learn about history and values?", type:"single", o:[
+   o("Parents.",["l_choice","k_order"]),
+   o("Teachers and subject experts.",["s_expert","s_redesign:.5"]),
+   o("One national curriculum set by the state.",["tt_children","n_unity"]),
+   o("Religious authorities.",["r_faith","tt_children"])]},
+ // ---- Tradition and belonging
+ {id:"custom", sec:"Tradition", q:"A custom has lasted 300 years and nobody can fully explain why. Most people would change it. What do you do?", type:"single", o:[
+   o("Keep it until there is a clear reason to change.",["k_inherit","k_order"]),
+   o("Examine it, and change it if it cannot be justified.",["s_redesign:.5","l_fix:.5"]),
+   o("Drop it. Age alone is not a reason.",["l_choice","a_illegit:.5"])]},
+ {id:"kids", sec:"Tradition", q:"What matters most in raising children?", type:"single", o:[
+   o("Respect for family and elders.",["k_order","k_obey"]),
+   o("Curiosity and independence.",["l_choice","l_rights"]),
+   o("Faith and moral character.",["r_faith"]),
+   o("Loyalty to the nation.",["n_loyal","tt_children:.5"])]},
+ {id:"faith", sec:"Tradition", q:"How should religion relate to government?", type:"single", o:[
+   o("Fully separate.",["l_rights","l_choice"]),
+   o("Government is neutral, but public life can acknowledge faith.",["r_law"]),
+   o("Law should follow my faith's morals.",["r_faith","r_law"]),
+   o("Religious authorities should hold the final say, and leaving or mocking the faith can be punished.",["t_relig_law","t_relig_dissent","r_faith","r_law"])]},
+ {id:"nation", sec:"Belonging", q:"What is a nation?", type:"single", o:[
+   o("A set of laws and ideals anyone can join.",["l_rights"],["n_ancestry"]),
+   o("People bound by shared ancestry, language and culture.",["n_ancestry","n_loyal"]),
+   o("A historical community with inherited customs.",["k_inherit","n_loyal"]),
+   o("A line on a map. People matter more than countries.",["f_inst"],["n_loyal"])]},
+ {id:"immig", sec:"Belonging", q:"How should immigration levels change?", type:"single", o:[
+   o("Go up.",["f_trade","l_choice"]),
+   o("Stay about the same, with orderly rules.",[]),
+   o("Go down, favoring skills and cultural fit.",["n_borders","n_native"]),
+   o("Be sharply reduced.",["n_immig","n_ancestry","n_native"])]},
+ {id:"rightsnation", sec:"Belonging", q:"When the nation's interest clashes with an individual's rights, which wins?", type:"single", o:[
+   o("The individual's rights.",["l_rights"],["n_over_rights"]),
+   o("Courts decide case by case.",["l_fix"]),
+   o("The nation.",["n_over_rights","tt_loyalty:.5"]),
+   o("The nation is one body, and individuals are its parts.",["t_statefirst","n_unity","n_over_rights"])]},
+ {id:"loyal", sec:"Belonging", q:"Which do you owe the most loyalty to?", type:"single", o:[
+   o("Family and community.",["k_order"]),
+   o("My fellow citizens.",["n_loyal"]),
+   o("My faith.",["r_faith"]),
+   o("All humanity.",["f_inst","f_rights:.5"],["n_loyal"]),
+   o("Working people everywhere.",["m_conflict","e_coop:.5"])]},
+ // ---- The state
+ {id:"change", sec:"The state", q:"How should big change happen?", type:"single", o:[
+   o("Gradually, through elections and compromise.",["k_inherit","l_fix"],["t_revolution"]),
+   o("Quickly, through elections with a big mandate.",["s_redesign","s_expert:.5"]),
+   o("Through revolution if elections cannot deliver it.",["t_revolution"]),
+   o("It shouldn't come from above. People should change how they live.",["a_illegit","l_choice"]),
+   o("From a strong leader.",["k_obey","t_statefirst"])]},
+ {id:"parties", sec:"The state", q:"How many political parties should there be?", type:"single", o:[
+   o("Many, competing freely.",["l_rights"],["t_oneparty"]),
+   o("Two or three big ones is fine.",[]),
+   o("One, representing the will of the people.",["t_oneparty","n_unity"]),
+   o("None. Communities should govern themselves.",["a_nostate","a_illegit"])]},
+ {id:"violence", sec:"The state", q:"When, if ever, is violence against political opponents justified?", type:"single", o:[
+   o("Never.",["l_rights"],["t_violence","t_revolution"]),
+   o("Only in self-defense or against invaders.",[]),
+   o("Against an unjust regime when no peaceful route is left.",["t_revolution"]),
+   o("To defend the nation or the movement against its enemies.",["t_violence","t_statefirst"])]},
+ {id:"stateneed", sec:"The state", q:"What is the state for?", type:"single", o:[
+   o("Courts, police and defense. Nothing more.",["e_small","e_market"]),
+   o("Those, plus services for everyone.",["e_welfare","l_fix"]),
+   o("It isn't needed. Communities can govern themselves.",["a_nostate","a_illegit"]),
+   o("It is the highest expression of the people's will.",["t_statefirst","n_unity"])]},
+ {id:"source", sec:"The state", q:"Where does a government's authority ultimately come from?", type:"single", o:[
+   o("The consent of the people.",["l_rights"],["t_crown","t_hered"]),
+   o("God.",["t_relig_law","r_faith"]),
+   o("An ancient crown and its line.",["t_crown","t_hered"]),
+   o("It doesn't. Most authority is illegitimate.",["a_illegit","a_nostate:.5"]),
+   o("The destiny of the nation.",["n_unity","n_loyal"])]},
+ // ---- The world
+ {id:"abroad", sec:"The world", q:"A distant country's government is attacking its own people. What should we do?", type:"single", o:[
+   o("Nothing. It is not our business.",["f_noally","f_other"]),
+   o("Act only if our own interests are threatened.",["f_vital","f_other:.5"]),
+   o("Work through the UN and treaties.",["f_inst","f_rights"]),
+   o("Lead a coalition of democracies, with force if needed.",["f_rights","f_force"]),
+   o("Act early with our own military.",["f_force","f_deter"])]},
+ {id:"allies", sec:"The world", q:"How should your country treat alliances?", type:"single", o:[
+   o("Avoid permanent alliances.",["f_noally"]),
+   o("Keep a few for defense.",["f_vital","f_other:.5"]),
+   o("Big institutions like NATO and the UN are essential.",["f_inst"]),
+   o("Alliances are tools. A strong military deters rivals.",["f_deter","f_force:.5"])]},
+ {id:"rival", sec:"The world", q:"A rival power is building up its military. What is the best response?", type:"single", o:[
+   o("Match it, and make clear we will respond.",["f_deter","f_force"]),
+   o("Negotiate treaties and tie our economies together.",["f_inst","f_trade"]),
+   o("Defend our own borders and stay out of its way.",["f_vital","f_noally"]),
+   o("Understand its interests and bargain.",["f_other","f_vital","f_trade:.5"])]}
+];
+if (typeof module !== "undefined") module.exports = {CLAIMS:CLAIMS, LABELS:LABELS, EDGES:EDGES, STANCES:STANCES, AX:AX, SETUP:SETUP, QS:QS};
+// Engine: answers -> claim values -> labels, readouts, panels. Pure functions.
+function parseS(e){ if (typeof e !== "string") return e; var p = e.split(":"); return [p[0], p.length > 1 ? parseFloat(p[1]) : 1]; }
+function optSupport(op){ var m = {}; op.s.forEach(function(e){ var p = parseS(e); m[p[0]] = p[1]; }); return m; }
+function touched(q){ var t = {}; q.o.forEach(function(op){ op.s.forEach(function(e){ t[parseS(e)[0]] = 1; }); op.n.forEach(function(c){ t[c] = 1; }); }); return Object.keys(t); }
+
+// chosen: single -> index; multi -> array of indices. Returns [[claim, value]].
+function evidenceFor(q, a){
+  if (a == null) return [];
+  var sel = q.type === "multi" ? a : [a], out = [];
+  touched(q).forEach(function(c){
+    var best = null, neg = false;
+    sel.forEach(function(i){ var op = q.o[i]; if (!op) return; if (op.n.indexOf(c) >= 0) neg = true; var w = optSupport(op)[c]; if (w != null && (best == null || w > best)) best = w; });
+    out.push([c, neg ? -1 : best != null ? best : -0.5]);
+  });
+  return out;
+}
+function claimValues(ans){
+  var acc = {};
+  QS.forEach(function(q){ evidenceFor(q, ans[q.id]).forEach(function(e){ var r = acc[e[0]] || (acc[e[0]] = {sum:0, n:0}); r.sum += e[1]; r.n++; }); });
+  var out = {}; Object.keys(acc).forEach(function(c){ out[c] = {v: acc[c].sum / acc[c].n, n: acc[c].n}; });
+  return out;
+}
+function matchOf(def, cv){
+  var num = 0, den = 0, tot = 0;
+  def.has.forEach(function(c){ tot += 1; if (cv[c]) { num += (cv[c].v + 1) / 2; den += 1; } });
+  (def.not || []).forEach(function(c){ tot += .6; if (cv[c]) { num += .6 * (1 - cv[c].v) / 2; den += .6; } });
+  if (den === 0) return 0;
+  var cover = den / tot;
+  return Math.max(0, Math.min(1, num / den)) * (0.5 + 0.5 * cover);
+}
+function accepted(cv, c){ return cv[c] && cv[c].v > .25; }
+function declined(cv, c){ return cv[c] && cv[c].v < -.25; }
+function pos(cv){
+  var r = {};
+  ["x","y"].forEach(function(ax){
+    var num = 0, den = 0, W = AX[ax];
+    Object.keys(W).forEach(function(c){ if (cv[c]) { num += W[c] * cv[c].v; den += Math.abs(W[c]); } });
+    r[ax] = den ? Math.max(-1, Math.min(1, num / den * 2.2)) : 0;
+  });
+  return r;
+}
+function labelPos(l){
+  var cv = {}; l.has.forEach(function(c){ cv[c] = {v:1,n:1}; }); (l.not || []).forEach(function(c){ cv[c] = {v:-1,n:1}; });
+  return pos(cv);
+}
+function band(p){ return p < .25 ? "Low" : p < .5 ? "Some" : p < .75 ? "Considerable" : "High"; }
+function scoreAll(ans){
+  var cv = claimValues(ans);
+  var ls = LABELS.map(function(l){ return {l:l, pct: matchOf(l, cv)}; }).sort(function(a, b){ return b.pct - a.pct; });
+  var top = ls[0], second = ls[1];
+  var mixed = top.pct < .66 || (top.l.side !== "N" && second.l.side !== "N" && top.l.side !== second.l.side && top.pct - second.pct < .05);
+  var p = pos(cv);
+  // cross the aisle
+  var mySide = top.l.side;
+  if (mySide === "N" || mixed) mySide = p.x < -.1 ? "L" : p.x > .1 ? "R" : "N";
+  var aisle = [];
+  if (!mixed || true) {
+    var want = mySide === "L" ? "R" : mySide === "R" ? "L" : null;
+    LABELS.forEach(function(l){
+      if (l.id === top.l.id) return;
+      if (want && l.side !== want) return;
+      var got = l.has.filter(function(c){ return accepted(cv, c); });
+      var share = got.length / l.has.length;
+      if (got.length >= 2 && share >= .4) aisle.push({l:l, got:got, share:share, n:l.has.length});
+    });
+    aisle.sort(function(a, b){ return b.share - a.share || b.got.length - a.got.length; });
+    aisle = aisle.slice(0, 3);
+  }
+  var edges = EDGES.map(function(e){
+    var got = e.claims.filter(function(c){ return accepted(cv, c); }), miss = e.claims.filter(function(c){ return declined(cv, c); });
+    return {e:e, got:got, miss:miss, share: got.length / e.claims.length};
+  }).sort(function(a, b){ return b.share - a.share; });
+  function avg01(ids){ var s = 0, n = 0; ids.forEach(function(c){ if (cv[c]) { s += (cv[c].v + 1) / 2; n++; } }); return n ? s / n : 0; }
+  function count(ids){ var a = 0, n = 0; ids.forEach(function(c){ if (cv[c]) { n++; if (accepted(cv, c)) a++; } }); return {a:a, n:n, ids:ids}; }
+  var marxA = count(["m_value","m_conflict","m_power","m_conc"]), marxP = count(["e_abolish","e_plan","t_oneparty","t_revolution"]);
+  var tt = avg01(["tt_loyalty","tt_surveil","tt_children","tt_ban","t_statefirst","t_oneparty"]);
+  var sv = cv.s_struct ? cv.s_struct.v : 0, iv = cv.s_indiv ? cv.s_indiv.v : 0, struct = (sv - iv) / 2;
+  var fp = STANCES.map(function(s){ return {s:s, pct: matchOf(s, cv)}; }).sort(function(a, b){ return b.pct - a.pct; });
+  return {cv:cv, labels:ls, top:top, second:second, mixed:mixed, pos:p, side:mySide, aisle:aisle, edges:edges, marxA:marxA, marxP:marxP, tt:tt, ttBand:band(tt), struct:struct, fp:fp};
+}
+if (typeof module !== "undefined") module.exports = {scoreAll:scoreAll, claimValues:claimValues, evidenceFor:evidenceFor, matchOf:matchOf, touched:touched, labelPos:labelPos};
+var ALL = SETUP.map(function(q){ q.type = "single"; q.setup = true; q.sec = "First, about you"; return q; }).concat(QS);
+var KEY = "plumbline-v2", app = document.getElementById("app"), S;
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function pct(x){ return Math.round(x * 100); }
+function fresh(){ return {idx:-1, ans:{}}; }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify({idx:S.idx, ans:S.ans})); } catch (e) {} }
+function shapeOk(q, a){
+  if (a == null) return true;
+  var n = q.o.length, ok = function(x){ return typeof x === "number" && x >= 0 && x < n; };
+  return q.type === "multi" ? Array.isArray(a) && a.every(ok) : ok(a);
+}
+function load(){
+  try {
+    var r = JSON.parse(localStorage.getItem(KEY) || "null"); if (!r || typeof r.idx !== "number" || !r.ans) return null;
+    var first = -1; ALL.forEach(function(q, i){ if (r.ans[q.id] != null && !shapeOk(q, r.ans[q.id])) { delete r.ans[q.id]; if (first < 0) first = i; } });
+    if (first >= 0) r.idx = Math.min(r.idx, first);
+    return {idx: Math.max(-1, Math.min(r.idx, ALL.length)), ans: r.ans};
+  } catch (e) { return null; }
+}
+function valid(q){ var a = S.ans[q.id]; return q.type === "multi" ? Array.isArray(a) && a.length > 0 : typeof a === "number"; }
+
+function render(){
+  window.scrollTo(0, 0);
+  if (S.idx < 0) return renderIntro();
+  if (S.idx >= ALL.length) return renderResults();
+  renderQuestion();
+}
+function renderIntro(){
+  app.innerHTML = '<div class="intro"><p class="eyebrow">A political survey with no labels</p><h1>Plumb Line</h1>' +
+    '<p class="lede">Most of us pick a team and let the label do the thinking. This asks what you believe about money, rights, power, belonging and the world, and only then tells you which labels fit.</p>' +
+    '<ul class="facts"><li><span>' + ALL.length + '</span> short questions, about 8 minutes</li><li><span>0</span> labels until the end</li><li><span>1</span> browser. Answers stay on this device.</li></ul>' +
+    '<p class="aside">There are no trick questions. Pick the answer closest to yours, even if none is quite right.</p>' +
+    '<button class="btn primary" data-act="start">Start</button></div>';
+}
+function renderQuestion(){
+  var q = ALL[S.idx], total = ALL.length;
+  var h = '<div class="top"><span class="brand">Plumb Line</span><span class="count">' + (S.idx + 1) + ' / ' + total + '</span></div>' +
+    '<div class="prog"><i style="width:' + (S.idx / total * 100) + '%"></i></div>' +
+    '<div class="card"><p class="eyebrow">' + esc(q.sec) + '</p><h2 class="q">' + esc(q.q) + '</h2>' +
+    (q.note ? '<p class="note">' + esc(q.note) + '</p>' : (q.type === "multi" ? '<p class="note">Select all that apply.</p>' : '')) + '<div id="qbody"></div><p class="hint" id="hint"></p></div>' +
+    '<div class="nav"><button class="btn" data-act="back">Back</button><button class="btn primary" data-act="next">' + (S.idx === total - 1 ? 'See my result' : 'Next') + '</button></div>';
+  app.innerHTML = h; renderBody();
+}
+function renderBody(){
+  var q = ALL[S.idx], a = S.ans[q.id], body = document.getElementById("qbody");
+  body.innerHTML = q.o.map(function(op, i){
+    var on = q.type === "multi" ? (Array.isArray(a) && a.indexOf(i) >= 0) : a === i;
+    return '<button type="button" class="opt' + (on ? ' on' : '') + '" data-act="pick" data-i="' + i + '" aria-pressed="' + on + '"><span class="key">' + (q.type === "multi" ? (on ? '✓' : '') : String.fromCharCode(65 + i)) + '</span><span class="otxt">' + esc(op.t) + '</span></button>';
+  }).join("");
+}
+function setHint(t){ var h = document.getElementById("hint"); if (h) h.textContent = t || ""; }
+
+function meter(name, p, left, right, note){
+  return '<div class="meter"><p class="mname">' + esc(name) + '</p><div class="mbar"><i style="left:' + Math.max(0, Math.min(100, p * 100)) + '%"></i></div><p class="mends"><span>' + esc(left) + '</span><span>' + esc(right) + '</span></p>' + (note ? '<p class="cap">' + note + '</p>' : '') + '</div>';
+}
+function claimList(ids, cv){
+  return '<ul class="evid">' + ids.map(function(c){
+    var v = cv[c] ? cv[c].v : null, st = v == null ? "Not asked" : v > .25 ? "You agree" : v < -.25 ? "You don't" : "Mixed";
+    return '<li><span class="eh">' + st + '</span>' + esc(CLAIMS[c]) + '</li>';
+  }).join("") + '</ul>';
+}
+function mapSvg(r){
+  var W = 360, C = W / 2, R = 140;
+  var X = function(x){ return C + x * R; }, Y = function(y){ return C - y * R; };
+  var s = '<svg class="map" viewBox="0 0 ' + W + ' ' + W + '" role="img" aria-label="Map of your position"><rect class="plot" x="20" y="20" width="320" height="320"/><line class="cross" x1="20" y1="' + C + '" x2="340" y2="' + C + '"/><line class="cross" x1="' + C + '" y1="20" x2="' + C + '" y2="340"/>' +
+    '<text class="axl" x="26" y="' + (C - 6) + '">COLLECTIVE</text><text class="axl" x="334" y="' + (C - 6) + '" text-anchor="end">MARKETS</text><text class="axl" x="' + (C + 6) + '" y="34">AUTHORITY</text><text class="axl" x="' + (C + 6) + '" y="334">LIBERTY</text>';
+  var placed = [];
+  r.labels.slice(0, 3).forEach(function(e){
+    var p = labelPos(e.l), cx = X(p.x), cy = Y(p.y), left = cx > C + 40, ty = cy + 4;
+    placed.forEach(function(q){ if (Math.abs(q.y - ty) < 14 && Math.abs(q.x - cx) < 150) ty = q.y + 14; });
+    placed.push({x:cx, y:ty});
+    s += '<circle class="tdot" cx="' + cx + '" cy="' + cy + '" r="5"/><text class="tlab" x="' + (cx + (left ? -9 : 9)) + '" y="' + ty + '" text-anchor="' + (left ? 'end' : 'start') + '">' + esc(e.l.name) + '</text>';
+  });
+  var yx = X(r.pos.x), yy = Y(r.pos.y);
+  s += '<circle class="you" cx="' + yx + '" cy="' + yy + '" r="9"/><text class="ylab" x="' + yx + '" y="' + (yy - 15) + '" text-anchor="middle">You</text></svg>';
+  return s;
+}
+function renderResults(){
+  var r = scoreAll(S.ans), t = r.top, l = t.l, cv = r.cv;
+  var h = '<div class="top"><span class="brand">Plumb Line</span><span class="count">Result</span></div><p class="eyebrow" style="margin-top:18px">What your answers add up to</p>';
+  h += '<div class="res">';
+  if (r.mixed) {
+    h += '<h1 class="big">Mixed, or hard to place</h1><p class="match">Closest: ' + esc(t.l.name) + ' ' + pct(t.pct) + '%, then ' + esc(r.second.l.name) + ' ' + pct(r.second.pct) + '%</p>' +
+      '<p style="margin-top:12px">No single label fits your answers well. That is a result, not a failure: your views mix positions that labels usually keep apart. The closest labels, and the claims pulling each way, are below.</p>';
+  } else {
+    h += '<h1 class="big">' + esc(l.name) + '</h1><p class="match"><span>' + pct(t.pct) + '%</span> match, with ' + esc(r.second.l.name) + ' next at ' + pct(r.second.pct) + '%</p><p style="margin-top:12px">' + esc(l.tell) + '</p><p class="cap">Thinkers in this tradition: ' + esc(l.anchors) + '.</p>';
+  }
+  h += '</div>';
+  h += '<div class="res"><h3>Where you sit</h3>' + mapSvg(r) + '<p class="cap">Horizontal: how far you lean toward public and worker ownership (left) or private markets (right). Vertical: how much authority over individuals you accept (up) or how much liberty you insist on (down). Teal dots are the three closest labels.</p></div>';
+  h += '<div class="res"><h3>What the match rests on</h3><p class="cap">The core claims of ' + esc(l.name) + ', and where you landed on each.</p>' + claimList(l.has, cv) + '</div>';
+  // aisle
+  h += '<div class="res"><h3>Where you cross the aisle</h3>';
+  if (r.aisle.length) {
+    h += '<p class="cap">Labels on the other side of the map that share claims with you.</p><ul class="think">' + r.aisle.map(function(a){
+      return '<li><b>' + esc(a.l.name) + '</b> <span class="match">' + a.got.length + ' of ' + a.n + ' claims</span><br>' + a.got.map(function(c){ return esc(CLAIMS[c]); }).join("<br>") + '</li>';
+    }).join("") + '</ul>';
+  } else h += '<p>No label on the other side shares at least two claims, and 40% of its list, with your answers.</p>';
+  h += '</div>';
+  // edge
+  var near = r.edges[0];
+  h += '<div class="res"><h3>How close to an edge</h3><p>' + (near.got.length ? 'Closest edge: <b>' + esc(near.e.name) + '</b>, ' + near.got.length + ' of ' + near.e.claims.length + ' tripwire claims.' : 'You accept none of the tripwire claims of any edge.') + '</p>' +
+    '<p class="cap">An edge is defined by means (abolition, force, one-party rule, hereditary or religious command), not by where you sit on the map. A committed socialist or libertarian can be nowhere near one.</p>' +
+    r.edges.map(function(e){ return meter(e.e.name, e.share, '0 tripwire claims', 'all ' + e.e.claims.length, e.got.length ? 'You accept: ' + e.got.map(function(c){ return esc(CLAIMS[c]); }).join(' ') : ''); }).join("") + '</div>';
+  // readouts
+  h += '<div class="res"><h3>Readouts</h3>' +
+    '<p class="mname">Marxist analysis and communist program</p><p>You accept <b>' + r.marxA.a + ' of ' + r.marxA.n + '</b> Marxist claims about how the economy works (workers create value, owners and workers conflict, capital buys power, wealth concentrates) and <b>' + r.marxP.a + ' of ' + r.marxP.n + '</b> about what to do (end private industry, plan centrally, one-party rule, revolution).</p>' +
+    meter('State control over private life', r.tt, 'None', 'Total', 'Level: <b>' + r.ttBand + '</b>. This is the share of state-control claims you accept: required loyalty, watching private messages, state-set teaching, bans on groups, and one-party rule.') +
+    meter('Why outcomes differ', (r.struct + 1) / 2, 'Individual choices', 'Systems and structures', '') +
+    '<p class="mname">Foreign policy</p><p><b>' + esc(r.fp[0].s.name) + '</b> ' + pct(r.fp[0].pct) + '%. ' + esc(r.fp[0].s.tell) + ' <span class="cap">Thinkers: ' + esc(r.fp[0].s.anchors) + '. Next: ' + esc(r.fp[1].s.name) + ' ' + pct(r.fp[1].pct) + '%.</span></p>';
+  var sel = S.ans.self, selOp = typeof sel === "number" ? SETUP[0].o[sel] : null, pty = typeof S.ans.party === "number" ? SETUP[1].o[S.ans.party].t : null;
+  if (selOp) {
+    var line = 'You called yourself <b>' + esc(selOp.t) + '</b>';
+    if (selOp.k && selOp.k.length) {
+      var best = r.labels.filter(function(e){ return selOp.k.indexOf(e.l.id) >= 0; })[0], rank = r.labels.indexOf(best) + 1;
+      line += '. Your answers match ' + esc(best.l.name) + ' at ' + pct(best.pct) + '%, which ranks ' + rank + ' of ' + r.labels.length + ' labels for you.';
+    } else line += '.';
+    if (pty) line += ' You usually vote: ' + esc(pty) + '.';
+    h += '<p class="mname">Your word and your answers</p><p>' + line + '</p>';
+  }
+  h += '</div>';
+  h += '<div class="res"><h3>Every label, ranked</h3><ul class="swaps">' + r.labels.map(function(e){ return '<li><div class="sh"><b>' + esc(e.l.name) + '</b><span class="chip">' + pct(e.pct) + '%</span></div></li>'; }).join("") + '</ul></div>';
+  h += '<div class="row"><button class="btn primary" data-act="share">Share my result</button><button class="btn" data-act="retake">Retake</button></div><div id="cpy"></div><p class="hint" id="hint"></p><p class="cap">Sharing sends only what you choose. This page stores nothing on a server.</p>';
+  app.innerHTML = h;
+}
+function resultText(){
+  var r = scoreAll(S.ans), t = r.top;
+  return "Plumb Line result\n" + (r.mixed ? "Mixed or hard to place (closest: " + t.l.name + " " + pct(t.pct) + "%, " + r.second.l.name + " " + pct(r.second.pct) + "%)" : t.l.name + " " + pct(t.pct) + "%") +
+    "\nForeign policy: " + r.fp[0].s.name + "\nState control: " + r.ttBand + "\nClosest edge: " + r.edges[0].e.name + " (" + r.edges[0].got.length + " of " + r.edges[0].e.claims.length + ")\nMarxist analysis claims: " + r.marxA.a + "/" + r.marxA.n + ", program claims: " + r.marxP.a + "/" + r.marxP.n;
+}
+
+app.addEventListener("click", function(e){
+  var el = e.target.closest("[data-act]"); if (!el) return;
+  var act = el.getAttribute("data-act");
+  if (act === "start") { S.idx = 0; save(); render(); }
+  else if (act === "pick") {
+    var q = ALL[S.idx], i = +el.getAttribute("data-i");
+    if (q.type === "multi") {
+      var a = Array.isArray(S.ans[q.id]) ? S.ans[q.id].slice() : [], at = a.indexOf(i);
+      if (at >= 0) a.splice(at, 1);
+      else if (q.o[i].x) a = [i];
+      else { a = a.filter(function(j){ return !q.o[j].x; }); a.push(i); }
+      S.ans[q.id] = a;
+    } else S.ans[q.id] = i;
+    save(); renderBody(); setHint("");
+  }
+  else if (act === "next") {
+    var cq = ALL[S.idx];
+    if (!valid(cq)) { setHint(cq.type === "multi" ? "Pick at least one, or the last option if none apply." : "Pick one to continue."); return; }
+    S.idx++; save(); render();
+  }
+  else if (act === "back") { if (S.idx > 0) { S.idx--; save(); render(); } else { S.idx = -1; save(); render(); } }
+  else if (act === "retake") { if (confirm("Clear your answers and start over?")) { S = fresh(); save(); render(); } }
+  else if (act === "share") {
+    var txt = resultText(), box = document.getElementById("cpy");
+    if (navigator.share) { navigator.share({title: "My Plumb Line result", text: txt, url: location.href}).catch(function(){}); return; }
+    var fallback = function(){ box.innerHTML = '<textarea class="copybox" readonly></textarea>'; var ta = box.firstChild; ta.value = txt; ta.select(); setHint("Select and copy the text below."); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function(){ setHint("Copied."); }, fallback); else fallback();
+  }
+});
+S = load() || fresh();
+render();
+</script></html>
